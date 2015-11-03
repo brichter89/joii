@@ -31,37 +31,40 @@
 var testsuite = {
     code  : "./dist/joii.js",
     tests : [
-         // PrototypeBuilder
-             "./test/PrototypeBuilder/DeepCopyTest.js",
-             "./test/PrototypeBuilder/InheritanceTest.js",
-             "./test/PrototypeBuilder/PropertyMetaTest.js",
-             "./test/PrototypeBuilder/TraitTest.js",
-         // ClassBuilder
-             "./test/ClassBuilder/InstantiationTest.js",
-             "./test/ClassBuilder/InheritanceTest.js",
-             "./test/ClassBuilder/AbstractImplementationTest.js",
-             "./test/ClassBuilder/VisibilityTest.js",
-             "./test/ClassBuilder/GetterTest.js",
-             "./test/ClassBuilder/SetterValidationTest.js",
-             "./test/ClassBuilder/NullableTypeTest.js",
-             "./test/ClassBuilder/TypeValidationTest.js",
-             "./test/ClassBuilder/InstanceOfTest.js",
-             "./test/ClassBuilder/CallTest.js",
-             "./test/ClassBuilder/ConstantTest.js",
-         // InterfaceBuilder,
-             "./test/InterfaceBuilder/InterfaceBuilderTest.js",
-             "./test/InterfaceBuilder/InterfaceValidationTest.js",
-         // EnumBuilder
-             "./test/EnumBuilder/EnumBuilderTest.js",
-         // Reflection
-             "./test/Reflection/ReflectionTest.js",
-         // GitHub Reported Issues
-             "./test/IssueReports/IssueReport4.js",
-             "./test/IssueReports/IssueReport9.js",
-             "./test/IssueReports/IssueReport10.js",
-             "./test/IssueReports/IssueReport11.js",
-             "./test/IssueReports/IssueReport15.js",
-             "./test/IssueReports/IssueReport16.js"
+        // PrototypeBuilder
+            "./test/PrototypeBuilder/ConstantTest.js",
+            "./test/PrototypeBuilder/DeepCopyTest.js",
+            "./test/PrototypeBuilder/InheritanceTest.js",
+            "./test/PrototypeBuilder/PropertyMetaTest.js",
+            "./test/PrototypeBuilder/TraitTest.js",
+        // ClassBuilder
+            "./test/ClassBuilder/InstantiationTest.js",
+            "./test/ClassBuilder/InheritanceTest.js",
+            "./test/ClassBuilder/AbstractImplementationTest.js",
+            "./test/ClassBuilder/VisibilityTest.js",
+            "./test/ClassBuilder/GetterTest.js",
+            "./test/ClassBuilder/SetterValidationTest.js",
+            "./test/ClassBuilder/NullableTypeTest.js",
+            "./test/ClassBuilder/TypeValidationTest.js",
+            "./test/ClassBuilder/InstanceOfTest.js",
+            "./test/ClassBuilder/CallTest.js",
+            "./test/ClassBuilder/ConstantTest.js",
+            "./test/ClassBuilder/StaticTest.js",
+        // InterfaceBuilder,
+            "./test/InterfaceBuilder/InterfaceBuilderTest.js",
+            "./test/InterfaceBuilder/InterfaceValidationTest.js",
+            "./test/InterfaceBuilder/InstanceOfTest.js",
+        // EnumBuilder
+            "./test/EnumBuilder/EnumBuilderTest.js",
+        // Reflection
+            "./test/Reflection/ReflectionTest.js",
+        // GitHub Reported Issues
+            "./test/IssueReports/IssueReport4.js",
+            "./test/IssueReports/IssueReport9.js",
+            "./test/IssueReports/IssueReport10.js",
+            "./test/IssueReports/IssueReport11.js",
+            "./test/IssueReports/IssueReport15.js",
+            "./test/IssueReports/IssueReport16.js"
     ]
 };
 

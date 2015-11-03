@@ -151,6 +151,15 @@
         // class definition upon other definitions without instantiation.
         definition.prototype = g.JOII.PrototypeBuilder(name, parameters, body, false);
 
+        // Apply static properties to definition
+        for (var i in definition.prototype) {
+            if (!definition.prototype.hasOwnProperty(i)) continue;
+            var meta = definition.prototype.__joii__.metadata[i];
+            if (!meta || meta.is_static !== true) continue;
+
+            definition[i] = definition.prototype[i];
+        }
+
         // Apply constants to the definition
         for (var i in definition.prototype.__joii__.constants) {
             g.JOII.CreateProperty(definition, i, definition.prototype.__joii__.constants[i], false);
