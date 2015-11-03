@@ -706,7 +706,8 @@
                 'is_read_only' : false,     // Don't generate a setter for the property.
                 'is_constant'  : false,     // Is the property publicly accessible?
                 'is_enum'      : false,     // Is the property an enumerator?
-                'is_generated' : false      // Is the property generated?
+                'is_generated' : false,     // Is the property generated?
+                'is_static'    : false      // Is the property static?
         }, i;
 
         // Remove the name from the list.
@@ -758,7 +759,7 @@
                     metadata.visibility = 'private';
                     break;
                 case 'abstract':
-                        metaHas('final', data, 'Property "' + name + '" cannot be both abstract and final at the same time.');
+                    metaHas('final', data, 'Property "' + name + '" cannot be both abstract and final at the same time.');
                     metadata.is_abstract = true;
                     break;
                 case 'final':
