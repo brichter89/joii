@@ -132,4 +132,27 @@ test('PrototypeBuilder:PropertyMetaTest', function(assert) {
         var a = JOII.PrototypeBuilder('Test', {}, { 'final protected function test' : function() {} });
         JOII.PrototypeBuilder('Test', { 'extends': a }, { 'protected function test' : function() {} });
     }, function(err) { return err === 'Final member "test" cannot be overwritten.'; }, 'Validate: Overriding final property.');
+
+    // A static property may not have visibility modifiers.
+    // TODO: remove when static + visibility is possible
+    var visibilityModifiers = ['private', 'protected', 'public'];
+    for (var i in visibilityModifiers) {
+        if (!visibilityModifiers.hasOwnProperty(i)) continue;
+        var visibilityModifier = visibilityModifiers[i];
+        assert.throws(function() {
+            var def = {};
+            def[visibilityModifier + ' static test'] = function() {};
+            JOII.PrototypeBuilder('Test', {}, def);
+        }, function(err) { return err === 'A static property cannot have visibility modifiers.'; }, 'Validate: static + ' + visibilityModifier)
+    }
+
+    // A static property may not be abstract.
+    assert.throws(function() {
+        JOII.PrototypeBuilder('Test', {}, { 'abstract static test' : function() {} });
+    }, function(err) { return err === 'A static property cannot be abstract.'; }, 'Validate: static + abstract');
+
+    // A static property may not be final.
+    assert.throws(function() {
+        JOII.PrototypeBuilder('Test', {}, { 'final static test' : function() {} });
+    }, function(err) { return err === 'A static property cannot be final.'; }, 'Validate: static + final');
 });

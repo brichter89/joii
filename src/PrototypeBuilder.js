@@ -427,6 +427,12 @@
                     metaHas(['nullable', 'immutable', 'read'], data, 'A constant cannot be nullable or immutable.');
                     metadata.is_constant = true;
                     break;
+                case 'static':
+                    metaHas(['private', 'protected', 'public'], data, 'A static property cannot have visibility modifiers.');
+                    metaHas('abstract', data, 'A static property cannot be abstract.');
+                    metaHas('final', data, 'A static property cannot be final.');
+                    metadata.is_static = true;
+                    break;
                 default:
                     if (g.JOII.Compat.indexOf(types, data[i]) !== -1) {
                         if (metadata.type !== null) {
