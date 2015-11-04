@@ -92,11 +92,6 @@
                 prototype[meta.name] = deep_copy[i];
             }
             prototype.__joii__.metadata[meta.name] = meta;
-
-            // Don't create getters and setters if we are an interface.
-            if (is_interface === true) {
-                continue;
-            }
         }
 
         if (typeof(parameters.abstract) !== 'undefined') {

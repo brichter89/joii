@@ -37,6 +37,7 @@ var testsuite = {
             "./test/PrototypeBuilder/InheritanceTest.js",
             "./test/PrototypeBuilder/PropertyMetaTest.js",
             "./test/PrototypeBuilder/TraitTest.js",
+            "./test/PrototypeBuilder/StaticTest.js",
         // ClassBuilder
             "./test/ClassBuilder/InstantiationTest.js",
             "./test/ClassBuilder/InheritanceTest.js",
