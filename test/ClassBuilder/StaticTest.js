@@ -35,6 +35,9 @@ test('ClassBuilder:StaticTest', function(assert) {
         'static fn' : function() {}
     });
 
-    assert.equal(A.field,      1,          'Class has static field.');
-    assert.equal(typeof(A.fn), 'function', 'Class has static function.');
+    var a = new A();
+
+    assert.equal(A.field,      1,           'Class has static field.');
+    assert.equal(typeof(A.fn), 'function',  'Class has static function.');
+    assert.equal(typeof(a.fn), 'undefined', 'Instance interface has no static function.');
 });

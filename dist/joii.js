@@ -1033,7 +1033,7 @@
                     }
                     // Only allow public functions in the outside scope.
                     if (typeof(this[i]) === 'function' &&
-                       (typeof(meta) === 'undefined' || meta.visibility === 'public') &&
+                       (typeof(meta) === 'undefined' || meta.visibility === 'public' && meta.is_static === false) &&
                        (i !== '__call')) {
                         scope_out[i] = g.JOII.Compat.Bind(scope_in[i], scope_in);
                     }
