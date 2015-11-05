@@ -250,10 +250,18 @@
                 meta.visibility !== 'private') {
 
                 var gs = g.JOII.CreatePropertyGetterSetter(deep_copy, meta);
+
                 prototype[gs.getter.name] = gs.getter.fn;
                 prototype.__joii__.metadata[gs.getter.name] = gs.getter.meta;
                 prototype[gs.setter.name] = gs.setter.fn;
                 prototype.__joii__.metadata[gs.setter.name] = gs.setter.meta;
+
+                if (meta.is_static) {
+                    prototype.__joii__.statics[gs.getter.name] = gs.getter.fn;
+                }
+                if (meta.is_static) {
+                    prototype.__joii__.statics[gs.setter.name] = gs.setter.fn;
+                }
             }
         }
 

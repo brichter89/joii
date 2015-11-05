@@ -70,5 +70,9 @@ test('ClassBuilder:StaticTest', function(assert) {
     assert.equal(b.getContextOfStaticFunction(),          B,          'Inherited static method called from inherited instance method has static context');
     assert.equal(b.getContextOfInheritedStaticFunction(), B,          'Inherited static method called from instance method has static context');
 
+    // Test static fields generate getters and setters
+    assert.equal(typeof(A.getField), 'function', 'Test static field generates static getter');
+    assert.equal(typeof(A.setField), 'function', 'Test static field generates static setter');
+
     // TODO: Test that inherited static functions have the correct context
 });

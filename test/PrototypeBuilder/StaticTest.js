@@ -111,6 +111,9 @@ test('PrototypeBuilder:StaticTest', function(assert) {
     assert.equal(pB.stFn10(), 'value', 'New static function can access inherited field');
     assert.equal(pB.stFn11(), 'quack', 'New static function can access overwritten field');
 
+    // Test prototype generates __joii__.statics for static properties
+    assert.equal(typeof(pA.__joii__.statics), 'object', 'Prototype generates __joii__.statics for static properties');
+
     // TODO: Uncomment when error for duplicate function name is thrown
     //assert.throws(function() {
     //    var pC = JOII.PrototypeBuilder(undefined, {}, {
