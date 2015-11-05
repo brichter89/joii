@@ -97,7 +97,7 @@
                     if (meta && meta.is_abstract === true) {
                         throw 'Missing abstract member implementation of "' + i + '".';
                     }
-                    // Only allow public functions in the outside scope.
+                    // Only allow public, non static functions in the outside scope.
                     if (typeof(this[i]) === 'function' &&
                        (typeof(meta) === 'undefined' || meta.visibility === 'public' && meta.is_static === false) &&
                        (i !== '__call')) {
@@ -128,7 +128,7 @@
             // Create a reference to the outer scope for use in fluid interfacing.
             scope_in.__api__ = scope_out;
 
-            // Does the class defintion have a constructor? If so, run it.
+            // Does the class definition have a constructor? If so, run it.
             for (var c in g.JOII.Config.constructors) {
                 if (g.JOII.Config.constructors.hasOwnProperty(c)) {
                     var cc = g.JOII.Config.constructors[c];
@@ -152,12 +152,21 @@
         definition.prototype = g.JOII.PrototypeBuilder(name, parameters, body, false);
 
         // Apply static properties to definition
+        // and wrap static methods in prototype to have a static context.
         for (var i in definition.prototype) {
             if (!definition.prototype.hasOwnProperty(i)) continue;
             var meta = definition.prototype.__joii__.metadata[i];
             if (!meta || meta.is_static !== true) continue;
 
             definition[i] = definition.prototype[i];
+
+            if (typeof(definition.prototype[i]) === 'function') {
+                definition.prototype[i] = (function(fn) {
+                    return function() {
+                        return definition[fn](arguments);
+                    };
+                })(i);
+            }
         }
 
         // Apply constants to the definition

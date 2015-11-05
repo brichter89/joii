@@ -32,12 +32,36 @@ test('ClassBuilder:StaticTest', function(assert) {
 
     var A = JOII.ClassBuilder({
         'static field' : 1,
-        'static fn' : function() {}
+
+        'static stFn' : function() {},
+
+        'static getStaticContext' : function() {
+            return this;
+        },
+
+        'public fn' : function() {},
+
+        'public getContextOfStaticFunction' : function() {
+            return this.getStaticContext();
+        }
     });
+
+    var B = JOII.ClassBuilder({});
 
     var a = new A();
 
-    assert.equal(A.field,      1,           'Class has static field.');
-    assert.equal(typeof(A.fn), 'function',  'Class has static function.');
-    assert.equal(typeof(a.fn), 'undefined', 'Instance interface has no static function.');
+    // Test static functions exist
+    assert.equal(A.field,        1,           'Class has static field.');
+    assert.equal(typeof(A.stFn), 'function',  'Class has static function.');
+    assert.equal(typeof(a.stFn), 'undefined', 'Instance interface has no static function.');
+
+    // Test static methods have correct context
+    assert.equal(A.getStaticContext(),              A,           'Static methods context is the class itself');
+    assert.equal(typeof(A.getStaticContext().stFn), 'function',  'Static methods can access other static properties');
+    assert.equal(typeof(A.getStaticContext().fn),   'undefined', 'Static methods can not access non static properties');
+
+    // Test static method called from instance method has static context
+    assert.equal(a.getContextOfStaticFunction(), A, 'Static method called from instance method has static context');
+
+    // TODO: Test that inherited static functions have the correct context
 });
