@@ -153,19 +153,18 @@
 
         // Apply static properties to definition
         // and wrap static methods in prototype to have a static context.
-        for (var i in definition.prototype) {
-            if (!definition.prototype.hasOwnProperty(i)) continue;
-            var meta = definition.prototype.__joii__.metadata[i];
-            if (!meta || meta.is_static !== true) continue;
+        var statics = definition.prototype.__joii__.statics;
+        for (var property in statics) {
+            if (!statics.hasOwnProperty(property)) continue;
 
-            definition[i] = definition.prototype[i];
+            definition[property] = statics[property];
 
-            if (typeof(definition.prototype[i]) === 'function') {
-                definition.prototype[i] = (function(fn) {
+            if (typeof(statics[property]) === 'function') {
+                definition.prototype[property] = (function(fn) {
                     return function() {
                         return definition[fn](arguments);
                     };
-                })(i);
+                })(property);
             }
         }
 

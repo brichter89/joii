@@ -46,9 +46,14 @@ test('ClassBuilder:StaticTest', function(assert) {
         }
     });
 
-    var B = JOII.ClassBuilder({});
+    var B = JOII.ClassBuilder({extends: A}, {
+        'public getContextOfInheritedStaticFunction' : function() {
+            return this.getStaticContext();
+        }
+    });
 
     var a = new A();
+    var b = new B();
 
     // Test static functions exist
     assert.equal(A.field,        1,           'Class has static field.');
@@ -56,12 +61,14 @@ test('ClassBuilder:StaticTest', function(assert) {
     assert.equal(typeof(a.stFn), 'undefined', 'Instance interface has no static function.');
 
     // Test static methods have correct context
-    assert.equal(A.getStaticContext(),              A,           'Static methods context is the class itself');
-    assert.equal(typeof(A.getStaticContext().stFn), 'function',  'Static methods can access other static properties');
-    assert.equal(typeof(A.getStaticContext().fn),   'undefined', 'Static methods can not access non static properties');
+    assert.equal(A.getStaticContext(),                    A,           'Static methods context is the class itself');
+    assert.equal(typeof(A.getStaticContext().stFn),       'function',  'Static methods can access other static properties');
+    assert.equal(typeof(A.getStaticContext().fn),         'undefined', 'Static methods can not access non static properties');
+    assert.equal(a.getContextOfStaticFunction(),          A,          'Static method called from instance method has static context');
 
-    // Test static method called from instance method has static context
-    assert.equal(a.getContextOfStaticFunction(), A, 'Static method called from instance method has static context');
+    assert.equal(B.getStaticContext(),                    B,          'Inherited static methods context is the class itself, not the superclass');
+    assert.equal(b.getContextOfStaticFunction(),          B,          'Inherited static method called from inherited instance method has static context');
+    assert.equal(b.getContextOfInheritedStaticFunction(), B,          'Inherited static method called from instance method has static context');
 
     // TODO: Test that inherited static functions have the correct context
 });

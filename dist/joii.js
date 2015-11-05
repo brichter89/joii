@@ -416,6 +416,7 @@
             parent          : undefined,
             metadata        : {},
             constants       : {},
+            statics         : {},
             implementations : [name],
             is_abstract     : parameters.abstract === true ? true : false,
             is_final        : parameters.final    === true ? true : false
@@ -442,6 +443,9 @@
                 prototype.__joii__.constants[meta.name] = deep_copy[i];
                 g.JOII.CreateProperty(prototype, meta.name, deep_copy[i], false);
             } else {
+                if (meta.is_static) {
+                    prototype.__joii__.statics[meta.name] = deep_copy[i];
+                }
                 prototype[meta.name] = deep_copy[i];
             }
             prototype.__joii__.metadata[meta.name] = meta;
@@ -481,6 +485,9 @@
 
             // Clone the constants of the parent into this one.
             prototype.__joii__.constants = g.JOII.Compat.extend(true, prototype.__joii__.constants, parent.__joii__.constants);
+
+            // Clone the statics of the parent into this one.
+            prototype.__joii__.statics = g.JOII.Compat.extend(true, prototype.__joii__.statics, parent.__joii__.statics)
 
             // The __joii__ property is usually hidden and not enumerable, so we
             // need to re-create it ourselves.
@@ -562,6 +569,12 @@
                         prototype[gs.setter.name] = gs.setter.fn;
                         prototype.__joii__.metadata[gs.setter.name] = gs.setter.meta;
                     }
+                    continue;
+                }
+
+                // Do not apply wrapper for static functions.
+                if (prototype.__joii__.metadata[i].is_static === true) {
+                    prototype[i] = property;
                     continue;
                 }
 
@@ -1088,19 +1101,18 @@
 
         // Apply static properties to definition
         // and wrap static methods in prototype to have a static context.
-        for (var i in definition.prototype) {
-            if (!definition.prototype.hasOwnProperty(i)) continue;
-            var meta = definition.prototype.__joii__.metadata[i];
-            if (!meta || meta.is_static !== true) continue;
+        var statics = definition.prototype.__joii__.statics;
+        for (var property in statics) {
+            if (!statics.hasOwnProperty(property)) continue;
 
-            definition[i] = definition.prototype[i];
+            definition[property] = statics[property];
 
-            if (typeof(definition.prototype[i]) === 'function') {
-                definition.prototype[i] = (function(fn) {
+            if (typeof(statics[property]) === 'function') {
+                definition.prototype[property] = (function(fn) {
                     return function() {
                         return definition[fn](arguments);
                     };
-                })(i);
+                })(property);
             }
         }
 
