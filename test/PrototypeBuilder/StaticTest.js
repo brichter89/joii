@@ -110,4 +110,24 @@ test('PrototypeBuilder:StaticTest', function(assert) {
     assert.equal(pB.stFn6(),  'quack', 'Overwritten function can access overwritten field');
     assert.equal(pB.stFn10(), 'value', 'New static function can access inherited field');
     assert.equal(pB.stFn11(), 'quack', 'New static function can access overwritten field');
+
+    // TODO: Uncomment when error for duplicate function name is thrown
+    //assert.throws(function() {
+    //    var pC = JOII.PrototypeBuilder(undefined, {}, {
+    //        'public fn' : function() {},
+    //        'static fn' : function() {}
+    //    });
+    //}, function(err) { return err === ''; }, 'Error when function name already exists')
+
+    assert.throws(function() {
+        JOII.PrototypeBuilder(undefined, {extends: pA}, {
+            'public stFn1': function () {}
+        });
+    }, function(err) { return err === 'Member "stFn1" must be static as defined in the parent class.'; }, 'Error when overwriting static property with non static');
+
+    assert.throws(function() {
+        JOII.PrototypeBuilder(undefined, {extends: pA}, {
+            'static fn1': function () {}
+        });
+    }, function(err) { return err === 'Member "fn1" must not be static as defined in the parent class.'; }, 'Error when overwriting non static property with static');
 });

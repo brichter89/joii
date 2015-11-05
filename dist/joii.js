@@ -535,6 +535,12 @@
                         if (property_meta.is_nullable !== proto_meta.is_nullable) {
                             throw 'Member "' + i + '" must be nullable as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
                         }
+
+                        // Is the property static?
+                        if (property_meta.is_static !== proto_meta.is_static) {
+                            // TODO: interface cannot have static members
+                            throw 'Member "' + i + '" must ' + (property_meta.is_static ? '' : 'not ') + 'be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
+                        }
                     }
                     continue;
                 }
