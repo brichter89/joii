@@ -161,4 +161,10 @@ test('ClassBuilder:StaticTest', function(assert) {
     // Test static fields generate getters and setters.
     assert.equal(typeof(A.getStField1), 'function', 'Test static field generates static getter');
     assert.equal(typeof(A.setStField1), 'function', 'Test static field generates static setter');
+
+    // Test static getters and setters.
+    assert.equal(A.setStField1(1337), A,    'Test static setter returns context to enable chaining');
+    assert.equal(A.st_field_1,        1337, 'Test static setter has changed static field value');
+    assert.equal(A.getStField1(),     1337, 'Test static getter returns static field value')
+
 });
