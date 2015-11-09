@@ -487,7 +487,19 @@
             prototype.__joii__.constants = g.JOII.Compat.extend(true, prototype.__joii__.constants, parent.__joii__.constants);
 
             // Clone the statics of the parent into this one.
-            prototype.__joii__.statics = g.JOII.Compat.extend(true, prototype.__joii__.statics, parent.__joii__.statics)
+            for (i in parent.__joii__.statics) {
+                if (!parent.__joii__.statics.hasOwnProperty(i)) continue;
+
+                if (typeof (prototype.__joii__.statics[i]) === 'undefined') {
+                    if (typeof(parent.__joii__.statics[i] === 'function')) {
+                        // Reference functions
+                        prototype.__joii__.statics[i] = parent.__joii__.statics[i];
+                    } else {
+                        // Deep clone properties
+                        prototype.__joii__.statics[i] = g.JOII.Compat.extend(true, {}, parent.__joii__.statics);
+                    }
+                }
+            }
 
             // The __joii__ property is usually hidden and not enumerable, so we
             // need to re-create it ourselves.
@@ -545,7 +557,7 @@
 
                         // Is the property static?
                         if (property_meta.is_static !== proto_meta.is_static) {
-                            // TODO: interface cannot have static members
+                            // TODO: maybe an interface should not have static members
                             throw 'Member "' + i + '" must ' + (property_meta.is_static ? '' : 'not ') + 'be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
                         }
                     }
@@ -573,10 +585,7 @@
                 }
 
                 // Do not apply wrapper for static functions.
-                if (prototype.__joii__.metadata[i].is_static === true) {
-                    prototype[i] = property;
-                    continue;
-                }
+                if (prototype.__joii__.metadata[i].is_static === true) continue;
 
                 // From this point on, the 'property' variable only contains
                 // functions. This is where the funny business starts. Instead
@@ -604,17 +613,16 @@
 
                 var gs = g.JOII.CreatePropertyGetterSetter(deep_copy, meta);
 
+                if (meta.is_static) {
+                    prototype.__joii__.statics[gs.getter.name] = gs.getter.fn;
+                    prototype.__joii__.statics[gs.setter.name] = gs.setter.fn;
+                    //continue; // Do not add static getters and setters to the prototype here
+                }
+
                 prototype[gs.getter.name] = gs.getter.fn;
                 prototype.__joii__.metadata[gs.getter.name] = gs.getter.meta;
                 prototype[gs.setter.name] = gs.setter.fn;
                 prototype.__joii__.metadata[gs.setter.name] = gs.setter.meta;
-
-                if (meta.is_static) {
-                    prototype.__joii__.statics[gs.getter.name] = gs.getter.fn;
-                }
-                if (meta.is_static) {
-                    prototype.__joii__.statics[gs.setter.name] = gs.setter.fn;
-                }
             }
         }
 
