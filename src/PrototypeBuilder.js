@@ -270,6 +270,28 @@
             }
         }
 
+        // Wrap static functions so that they use the static context and
+        // add them to the prototype. We do this _before_ creating getters
+        // and setters. This fixes a bug where getters and setters were
+        // generated for static functions.
+        var statics = prototype.__joii__.statics;
+        for (var i in statics) {
+            if (!statics.hasOwnProperty(i)) continue;
+
+            // Only add static functions to the prototype.
+            // Static fields should only be accessible through 'this.static'.
+            if (typeof(statics[i]) === 'function') {
+                var meta = prototype.__joii__.metadata[i];
+
+                // Wrap static functions so that they use the static context.
+                prototype[meta.name] = (function(fn) {
+                    return function() {
+                        return prototype.__joii__.statics[fn].apply(definition, arguments);
+                    };
+                })(meta.name);
+            }
+        }
+
         // Create getters and setters for properties. We do this _after_ the
         // copying of the parent object because that prototype doesn't contain
         // the getter/setter methods yet. (Fixes issue #10)
@@ -293,25 +315,6 @@
                     prototype[gs.getter.name] = gs.getter.fn;
                     prototype[gs.setter.name] = gs.setter.fn;
                 }
-            }
-        }
-
-        var statics = prototype.__joii__.statics;
-        for (var i in statics) {
-            if (!statics.hasOwnProperty(i)) continue;
-
-            var meta = prototype.__joii__.metadata[i];
-
-            // Only add static functions to the prototype.
-            // Static fields should only be accessible through 'this.static'.
-            if (typeof(statics[i]) === 'function') {
-                // Add static functions to the prototype so they can be used in
-                // instances using the 'this' keyword.
-                prototype[meta.name] = (function(fn) {
-                    return function() {
-                        return prototype.__joii__.statics[fn].apply(definition, arguments);
-                    };
-                })(meta.name);
             }
         }
 

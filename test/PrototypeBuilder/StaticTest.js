@@ -59,8 +59,6 @@ test('PrototypeBuilder:StaticTest', function(assert) {
         }
     }, undefined, defB);
 
-    // TODO no getters/setters for functions!
-
     // Test prototype generates __joii__.statics for static properties
     assert.equal(typeof(pA.__joii__.statics),       'object',   'Prototype generates __joii__.statics for static properties');
     assert.equal(pB.__joii__.statics.st_field_1,    '1',        '__joii__.statics contains static field')
@@ -86,6 +84,12 @@ test('PrototypeBuilder:StaticTest', function(assert) {
     assert.equal(pB.getStaticContext(),  defB, 'Inherited static method called from instance method has static context of current class, not the superclass');
     assert.equal(pB.getStaticContext2(), defB, 'Overwritten static method called from instance method has static context of current class');
 
+    // Test no getters and setters are generated for static functions
+    assert.equal(typeof(pA.getStfn1), 'undefined', 'Do not create getters for static functions');
+    assert.equal(typeof(pA.setStfn1), 'undefined', 'Do not create setters for static functions');
+    assert.equal(typeof(pB.setStfn1), 'undefined', 'Do not create setters for inherited static functions');
+    assert.equal(typeof(pB.setStfn1), 'undefined', 'Do not create setters for overwritten static functions');
+
     // Test overwriting static with static or non-static with non-static does not throw errors
     assert.ok(JOII.PrototypeBuilder(undefined, {extends: pA}, {
         'static stFn1' : function() {}
@@ -108,11 +112,11 @@ test('PrototypeBuilder:StaticTest', function(assert) {
         JOII.PrototypeBuilder(undefined, {extends: pA}, {
             'public stFn1': function () {}
         });
-    }, function(err) { return err === 'Member "stFn1" must be static as defined in the parent class.'; }, 'Error when overwriting static property with non static');
+    }, function(err) { return err === 'Member "stFn1" must be static as defined in the parent class.'; }, 'Error when overwriting static property with non-static');
 
     assert.throws(function() {
         JOII.PrototypeBuilder(undefined, {extends: pA}, {
             'static fn1': function () {}
         });
-    }, function(err) { return err === 'Member "fn1" must not be static as defined in the parent class.'; }, 'Error when overwriting non static property with static');
+    }, function(err) { return err === 'Member "fn1" must not be static as defined in the parent class.'; }, 'Error when overwriting non-static property with static');
 });

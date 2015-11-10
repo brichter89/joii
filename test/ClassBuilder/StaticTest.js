@@ -68,7 +68,7 @@ test('ClassBuilder:StaticTest', function(assert) {
     // Test static methods have correct context.
     assert.equal(A.getStaticContext(),               A,           'Static methods context is the class itself');
     assert.equal(typeof(A.getStaticContext().stFn1), 'function',  'Static methods can access other static properties');
-    assert.equal(typeof(A.getStaticContext().fn),    'undefined', 'Static methods can not access non static properties');
+    assert.equal(typeof(A.getStaticContext().fn),    'undefined', 'Static methods can not access non-static properties');
 
     // Test inheritance
     assert.equal(B.st_field_1,         1,                          'Class has inherited static field.');
