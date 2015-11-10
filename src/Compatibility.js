@@ -141,6 +141,10 @@
                     g.JOII.CreateProperty(target, '__joii__', options.__joii__);
                 }
 
+                if (typeof(options.static) !== 'undefined') {
+                    g.JOII.CreateProperty(target, 'static', options.static);
+                }
+
                 for (var name in options) {
                     src = target[name];
                     copy = options[name];

@@ -149,33 +149,16 @@
 
         // Apply to prototype to the instantiator to allow extending the
         // class definition upon other definitions without instantiation.
-        definition.prototype = g.JOII.PrototypeBuilder(name, parameters, body, false);
+        definition.prototype = g.JOII.PrototypeBuilder(name, parameters, body, false, definition);
 
-        // Apply static properties to definition
-        // and wrap static methods in prototype to have a static context.
+        // Apply static properties to definition.
         var statics = definition.prototype.__joii__.statics;
         for (var property in statics) {
             if (!statics.hasOwnProperty(property)) continue;
 
             // Add all static properties to definition
             definition[property] = statics[property];
-
-            if (typeof(statics[property]) === 'function') {
-                // Add static functions to the prototype so they can be used in instances using the 'this' keyword.
-                definition.prototype[property] = (function(fn) {
-                    return function() {
-                        return definition[fn].apply(definition, arguments);
-                    };
-                })(property);
-            }
         }
-
-        // Add definition to prototype.static so that all static properties
-        // can be used with 'this.static' inside instance methods.
-        definition.prototype.static = definition;
-        // Generate metadata for 'static'
-        definition.prototype.__joii__.metadata.static = g.JOII.ParseClassProperty('private static');
-        definition.prototype.__joii__.metadata.static.is_generated = true;
 
         // Apply constants to the definition
         for (var i in definition.prototype.__joii__.constants) {

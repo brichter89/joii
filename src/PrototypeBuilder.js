@@ -46,16 +46,22 @@
      *      'extends'    : <class-type> Inherit a parent type
      *      'implements' : <array of interface-type>
      *
-     * @param  string name
-     * @param  object parameters
-     * @param  object body
-     * @return function
+     * @param  string   name
+     * @param  object   parameters
+     * @param  object   body
+     * @param  bool     is_interface
+     * @param  function definition
+     * @return object
      */
-    g.JOII.PrototypeBuilder = function (name, parameters, body, is_interface) {
+    g.JOII.PrototypeBuilder = function (name, parameters, body, is_interface, definition) {
 
         // Create a clean prototype of the class body.
         var prototype = {},
             deep_copy = g.JOII.Compat.extend(true, {}, body);
+
+        // Create the 'static' reference that can be used to access static
+        // properties from instance functions ('this.static').
+        g.JOII.CreateProperty(prototype, 'static', definition);
 
         // Create the internal JOII-object.
         g.JOII.CreateProperty(prototype, '__joii__', {
@@ -84,14 +90,19 @@
         // Iterate over properties from the deep_copy, get the metadata of the
         // property and move them in the prototype.
         for (var i in deep_copy) {
+            if (!deep_copy.hasOwnProperty(i)) continue;
+
+           // var property = deep_copy[i];
             var meta = g.JOII.ParseClassProperty(i);
 
             if (meta.is_constant) {
                 prototype.__joii__.constants[meta.name] = deep_copy[i];
                 g.JOII.CreateProperty(prototype, meta.name, deep_copy[i], false);
             } else if (meta.is_static) {
+                // Put every static property in the __joii__.statics object, so that
+                // they can be added to the prototype after inheriting from parent and
+                // to the class definition by the ClassBuilder
                 prototype.__joii__.statics[meta.name] = deep_copy[i];
-                // Do not add static properties to the prototype here.
             } else {
                 prototype[meta.name] = deep_copy[i];
             }
@@ -107,6 +118,8 @@
 
         // Apply the parent prototype.
         if (typeof(parameters['extends']) !== 'undefined') {
+            // TODO: maybe an interface should not have static members
+
             var parent = parameters['extends'];
 
             // If the given parent is a function, use its prototype.
@@ -133,17 +146,23 @@
             // Clone the constants of the parent into this one.
             prototype.__joii__.constants = g.JOII.Compat.extend(true, prototype.__joii__.constants, parent.__joii__.constants);
 
+            // The __joii__ property is usually hidden and not enumerable, so we
+            // need to re-create it ourselves.
+            g.JOII.CreateProperty(prototype.__joii__.parent, '__joii__', (parent.__joii__));
+
             // Clone the statics of the parent into this one.
             for (i in parent.__joii__.statics) {
                 if (!parent.__joii__.statics.hasOwnProperty(i)) continue;
 
                 // Is the parent property static too?
                 if (typeof(prototype.__joii__.metadata[i]) !== 'undefined' && prototype.__joii__.metadata[i].is_static !== true) {
-                    // TODO: maybe an interface should not have static members
                     throw 'Member "' + i + '" must be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
                 }
 
                 if (typeof (prototype.__joii__.statics[i]) === 'undefined') {
+                    // Copy metadata of parent
+                    prototype.__joii__.metadata[i] = g.JOII.Compat.extend(true, {}, parent.__joii__.metadata[i]);
+
                     if (typeof(parent.__joii__.statics[i] === 'function')) {
                         // Reference functions
                         prototype.__joii__.statics[i] = parent.__joii__.statics[i];
@@ -153,10 +172,6 @@
                     }
                 }
             }
-
-            // The __joii__ property is usually hidden and not enumerable, so we
-            // need to re-create it ourselves.
-            g.JOII.CreateProperty(prototype.__joii__.parent, '__joii__', (parent.__joii__));
 
             // Iterate over the properties of the parent object and apply the
             // contents in our own prototype where applicable.
@@ -176,6 +191,9 @@
                 var property      = prototype.__joii__.parent[i];
                 var property_meta = prototype.__joii__.parent.__joii__.metadata[i];
                 var proto_meta    = prototype.__joii__.metadata[i];
+
+                // Do not process static properties here
+                if (property_meta.is_static === true) continue;
 
                 if (typeof(proto_meta) === 'undefined') {
                     proto_meta = prototype.__joii__.metadata[i] = property_meta;
@@ -217,9 +235,6 @@
                     }
                     continue;
                 }
-
-                // Do not add static properties to prototype.
-                if (prototype.__joii__.metadata[i].is_static === true) continue;
 
                 // It's safe to apply non-function properties immediatly.
                 if (typeof(property) !== 'function' || is_interface === true) {
@@ -278,6 +293,25 @@
                     prototype[gs.getter.name] = gs.getter.fn;
                     prototype[gs.setter.name] = gs.setter.fn;
                 }
+            }
+        }
+
+        var statics = prototype.__joii__.statics;
+        for (var i in statics) {
+            if (!statics.hasOwnProperty(i)) continue;
+
+            var meta = prototype.__joii__.metadata[i];
+
+            // Only add static functions to the prototype.
+            // Static fields should only be accessible through 'this.static'.
+            if (typeof(statics[i]) === 'function') {
+                // Add static functions to the prototype so they can be used in
+                // instances using the 'this' keyword.
+                prototype[meta.name] = (function(fn) {
+                    return function() {
+                        return prototype.__joii__.statics[fn].apply(definition, arguments);
+                    };
+                })(meta.name);
             }
         }
 
@@ -578,18 +612,32 @@
      * property is created instead. Please be aware that unit-tests using
      * deepEqual-assertions might fail on this using older browsers.
      *
-     * @param object obj
-     * @param string name
-     * @param mixed  val
+     * @param object      obj
+     * @param string      name
+     * @param mixed       val
+     * @param object|bool config
      */
-    g.JOII.CreateProperty = function(obj, name, val, writable) {
+    g.JOII.CreateProperty = function(obj, name, val, config) {
+        if (typeof(config) !== 'object') {
+            // This is for compatibility: previously, the "config" parameter was
+            // named "writable" and was only a bool. For compatibility reasons
+            // one can still pass a boolean into config. In this case, the config
+            // object is created so that the old behaviour is retained.
+            var writable = config;
+            config = {
+                enumerable   : writable === false,
+                configurable : writable !== false,
+                writable     : writable !== false
+            }
+        }
+
         try {
             if (typeof(Object.defineProperty) !== 'undefined') {
                 Object.defineProperty(obj, name, {
                     value        : val,
-                    enumerable   : (writable === false ? true : false),
-                    configurable : (writable === false ? false : true),
-                    writable     : (writable === false ? false : true)
+                    enumerable   : config.enumerable   === true, // default: false
+                    configurable : config.configurable === true, // default: false
+                    writable     : config.writable     === true  // default: false
                 });
                 return;
             } else {

@@ -30,18 +30,61 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 test('PrototypeBuilder:StaticTest', function(assert) {
 
+    var defA = function() {};
+    var defB = function() {};
     var pA = JOII.PrototypeBuilder(undefined, {}, {
-        'static function stFn1' : function() {
-            return 'stFn1-return';
+        'static st_field_1' : 1,
+        'static st_field_2' : 'other_value',
+
+        'static getStaticContext' : function() {
+            return this;
         },
 
-        'public function fn1' : function() {
-            return this.st_field_1;
+        'static getStaticContext2' : function() {},
+
+        'static function stFn1' : function() {},
+
+        'public function fn1' : function() {}
+    }, undefined, defA);
+
+    var pB = JOII.PrototypeBuilder(undefined, {extends: pA}, {
+        'static st_field_2' : 'quack',
+
+        'static getStaticContext2' : function() {
+            return this;
+        },
+
+        'static stFn2' : function() {
+            return 'overwritten-stFn2-return';
         }
-    });
+    }, undefined, defB);
+
+    // TODO no getters/setters for functions!
 
     // Test prototype generates __joii__.statics for static properties
-    assert.equal(typeof(pA.__joii__.statics), 'object', 'Prototype generates __joii__.statics for static properties');
+    assert.equal(typeof(pA.__joii__.statics),       'object',   'Prototype generates __joii__.statics for static properties');
+    assert.equal(pB.__joii__.statics.st_field_1,    '1',        '__joii__.statics contains static field')
+    assert.equal(typeof(pB.__joii__.statics.stFn1), 'function', '__joii__.statics contains static function')
+
+    // Test prototype has property "static"
+    assert.equal(typeof(pA.static), 'function', 'Prototype has property "static"');
+    assert.equal(pA.static,         defA,       'Prototype "static" property is the "definition"');
+
+    // Test methods of instance can use static methods with 'this'.
+    assert.equal(typeof(pA.stFn1),      'function',  'Prototype contains static function');
+    assert.equal(typeof(pA.st_field_1), 'undefined', 'Prototype does not contain static field');
+
+    assert.equal(pA.getStaticContext(), defA, 'Static method called from instance method has static context (using "this")');
+
+    // Test inheritance of static properties
+    assert.equal(typeof(pB.stFn1),               'function',                 'Prototype contains inherited static function');
+    assert.equal(pB.stFn2(),                     'overwritten-stFn2-return', 'Prototype contains overwritten static function');
+    assert.equal(pB.__joii__.statics.st_field_1, '1',                        '__joii__.statics contains inherited static field')
+    assert.equal(pB.__joii__.statics.st_field_2, 'quack',                    '__joii__.statics contains overwritten static field')
+
+    // Test inheritance
+    assert.equal(pB.getStaticContext(),  defB, 'Inherited static method called from instance method has static context of current class, not the superclass');
+    assert.equal(pB.getStaticContext2(), defB, 'Overwritten static method called from instance method has static context of current class');
 
     // Test overwriting static with static or non-static with non-static does not throw errors
     assert.ok(JOII.PrototypeBuilder(undefined, {extends: pA}, {

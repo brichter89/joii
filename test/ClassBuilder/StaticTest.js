@@ -34,161 +34,49 @@ test('ClassBuilder:StaticTest', function(assert) {
         'static st_field_1' : 1,
         'static st_field_2' : 'other_value',
 
-        'static stFn' : function() {},
-
         'static getStaticContext' : function() {
             return this;
         },
 
-        'public getContextOfStaticFunction' : function() {
-            return this.getStaticContext();
-        },
+        'static function stFn1' : function() {},
 
-        'public getStaticContextOfStaticFunction' : function() {
-            return this.static.getStaticContext();
-        },
-
-        'public getInstanceContext' : function() {
-            return this;
-        },
-
-        'static function stFn1' : function() {
-            return 'stFn1-return';
-        },
-
-        'static function stFn2' : function() {
-            return 'stFn2-return';
-        },
-
-        'static stFn3' : function() {
-            return this.st_field_1;
-        },
-
-        'static stFn4' : function() {
-            return this.st_field_1;
-        },
-
-        'static stFn5' : function() {
-            return this.st_field_2;
-        },
-
-        'static stFn6' : function() {
-            return this.st_field_2;
-        },
+        'static function stFn2' : function() {},
 
         'public function getStaticValue' : function() {
             return this.static.st_field_1;
-        },
-
-        'public function fn1' : function() {
-            return this.static.st_field_1;
-        },
-
-        'public function fn2' : function() {
-            return this.stFn1();
-        },
-
-        'public function fn3' : function() {
-            return this.static.stFn1();
         }
     });
 
     var B = JOII.ClassBuilder({extends: A}, {
         'static st_field_2' : 'quack',
 
-        'public getContextOfInheritedStaticFunction' : function() {
-            return this.getStaticContext();
-        },
-
-        'public getStaticContextOfInheritedStaticFunction' : function() {
-            return this.static.getStaticContext();
-        },
-
         'static stFn2' : function() {
             return 'overwritten-stFn2-return';
-        },
-
-        'static stFn4' : function() {
-            return this.st_field_1;
-        },
-
-        'static stFn6' : function() {
-            return this.st_field_2;
-        },
-
-        'static stFn10' : function() {
-            return this.st_field_1;
-        },
-
-        'static stFn11' : function() {
-            return this.st_field_2;
         }
     });
 
     var a = new A();
     var a2 = new A();
     var b = new B();
-
-    var context_a = a.getInstanceContext();
-    var context_b = b.getInstanceContext();
+    var b2 = new B();
 
     // Test static functions exist.
-    assert.equal(A.st_field_1,   1,           'Class has static field.');
-    assert.equal(typeof(A.stFn), 'function',  'Class has static function.');
-    assert.equal(typeof(a.stFn), 'undefined', 'Instance interface has no static function.');
-
-    // Test methods of instance can use static methods with 'this'.
-    assert.equal(typeof(context_a.stFn1),      'function',     'Context of instance contains static function');
-    assert.equal(context_a.fn1(),              1,              'Methods of instance can access static field with "this.static"');
-    assert.equal(context_a.fn2(),              'stFn1-return', 'Methods of instance can access static method with "this"');
-    assert.equal(context_a.fn3(),              'stFn1-return', 'Methods of instance can access static method with "this.static"');
-    assert.equal(typeof(context_a.st_field_1), 'undefined',    'Context of instance does not contain static field');
-
-    // Test method of instance can use all static properties with 'this.static'
-    assert.equal(typeof(context_a.static.st_field_1), 'number',        'this.static contains static field');
-    assert.equal(typeof(context_a.static.stFn1),      'function',      'this.static contains static function');
+    assert.equal(A.st_field_1,   1,            'Class has static field.');
+    assert.equal(typeof(A.stFn1), 'function',  'Class has static function.');
+    assert.equal(typeof(a.stFn1), 'undefined', 'Instance interface has no static function.');
 
     // Test static methods have correct context.
-    assert.equal(A.getStaticContext(),                 A,           'Static methods context is the class itself');
-    assert.equal(typeof(A.getStaticContext().stFn),    'function',  'Static methods can access other static properties');
-    assert.equal(typeof(A.getStaticContext().fn),      'undefined', 'Static methods can not access non static properties');
-    assert.equal(a.getContextOfStaticFunction(),       A,           'Static method called from instance method has static context (using "this")');
-    assert.equal(a.getStaticContextOfStaticFunction(), A,           'Static method called from instance method has static context (using "this.static")');
+    assert.equal(A.getStaticContext(),               A,           'Static methods context is the class itself');
+    assert.equal(typeof(A.getStaticContext().stFn1), 'function',  'Static methods can access other static properties');
+    assert.equal(typeof(A.getStaticContext().fn),    'undefined', 'Static methods can not access non static properties');
 
-    assert.equal(B.getStaticContext(),                          B,          'Inherited static methods context is the class itself, not the superclass');
-    assert.equal(b.getContextOfStaticFunction(),                B,          'Inherited static method called from inherited instance method has static context (using "this")');
-    assert.equal(b.getContextOfInheritedStaticFunction(),       B,          'Inherited static method called from instance method has static context (using "this")');
-    assert.equal(b.getStaticContextOfStaticFunction(),          B,          'Inherited static method called from inherited instance method has static context (using "this.static")');
-    assert.equal(b.getStaticContextOfInheritedStaticFunction(), B,          'Inherited static method called from instance method has static context (using "this.static")');
-
-    // Test inheritance of static properties
-    assert.equal(typeof(context_b.static.st_field_1), 'number',                   'Context contains inherited static field');
-    assert.equal(context_b.static.st_field_2,         'quack',                    'Context contains overwritten static field');
-    assert.equal(typeof(context_b.static.stFn1),      'function',                 'Context contains inherited static function');
-    assert.equal(context_b.static.stFn2(),            'overwritten-stFn2-return', 'Context contains overwritten static function');
-
-    // Test scopes (static)
-    assert.equal(B.stFn3(),  1,       'Inherited static function can access inherited field');
-    assert.equal(B.stFn4(),  1,       'Overwritten static function can access inherited field');
-    assert.equal(B.stFn5(),  'quack', 'Inherited static function can access overwritten field');
-    assert.equal(B.stFn6(),  'quack', 'Overwritten static function can access overwritten field');
-    assert.equal(B.stFn10(), 1,       'New static static function can access inherited field');
-    assert.equal(B.stFn11(), 'quack', 'New static static function can access overwritten field');
-
-    // Test scopes (none static)
-    assert.equal(context_b.stFn3(),  1,       'Inherited function can access inherited field (using "this")');
-    assert.equal(context_b.stFn4(),  1,       'Overwritten function can access inherited field (using "this")');
-    assert.equal(context_b.stFn5(),  'quack', 'Inherited function can access overwritten field (using "this")');
-    assert.equal(context_b.stFn6(),  'quack', 'Overwritten function can access overwritten field (using "this")');
-    assert.equal(context_b.stFn10(), 1,       'New static function can access inherited field (using "this")');
-    assert.equal(context_b.stFn11(), 'quack', 'New static function can access overwritten field (using "this")');
-
-    assert.equal(context_b.static.stFn3(),  1,       'Inherited function can access inherited field (using "this.static")');
-    assert.equal(context_b.static.stFn4(),  1,       'Overwritten function can access inherited field (using "this.static")');
-    assert.equal(context_b.static.stFn5(),  'quack', 'Inherited function can access overwritten field (using "this.static")');
-    assert.equal(context_b.static.stFn6(),  'quack', 'Overwritten function can access overwritten field (using "this.static")');
-    assert.equal(context_b.static.stFn10(), 1,       'New static function can access inherited field (using "this.static")');
-    assert.equal(context_b.static.stFn11(), 'quack', 'New static function can access overwritten field (using "this.static")');
+    // Test inheritance
+    assert.equal(B.st_field_1,         1,                          'Class has inherited static field.');
+    assert.equal(B.st_field_2,         'quack',                    'Class has overwritten static field.');
+    assert.equal(typeof(B.stFn1),      'function',                 'Class has inherited static function.');
+    assert.equal(B.stFn2(),            'overwritten-stFn2-return', 'Class has overwritten static function.');
+    assert.equal(B.getStaticContext(), B,                          'Inherited static methods context is the class itself, not the superclass');
+    assert.equal(typeof(b.stFn1),      'undefined',                'Instance interface has no inherited static function.');
 
     // Test static fields generate getters and setters.
     assert.equal(typeof(A.getStField1), 'function', 'Test static field generates static getter');
@@ -201,6 +89,7 @@ test('ClassBuilder:StaticTest', function(assert) {
 
     // Test static values change for all instances.
     A.setStField1(5);
-    assert.equal((a.getStaticValue() + a2.getStaticValue()), 10, 'Test static values change for all instances')
+    assert.equal((a.getStaticValue() + a2.getStaticValue()), 10, 'Test static values change for all instances');
+    assert.equal((b.getStaticValue() + b2.getStaticValue()), 2,  'Test static values changes only in instances of that class');
 
 });
