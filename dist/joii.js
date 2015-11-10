@@ -384,7 +384,7 @@
     // Register JOII 'namespace'.
     g.JOII = typeof(g.JOII) !== 'undefined' ? g.JOII : {};
 
-    g.JOII.InternalPropertyNames = ['__joii__', 'super', 'instanceOf'];
+    g.JOII.InternalPropertyNames = ['__joii__', 'super', 'instanceOf', 'static'];
     g.JOII.InternalTypeNames     = [
         'undefined', 'object', 'boolean',
         'number'   , 'string', 'symbol',
@@ -442,10 +442,10 @@
             if (meta.is_constant) {
                 prototype.__joii__.constants[meta.name] = deep_copy[i];
                 g.JOII.CreateProperty(prototype, meta.name, deep_copy[i], false);
+            } else if (meta.is_static) {
+                prototype.__joii__.statics[meta.name] = deep_copy[i];
+                // Do not add static properties to the prototype here.
             } else {
-                if (meta.is_static) {
-                    prototype.__joii__.statics[meta.name] = deep_copy[i];
-                }
                 prototype[meta.name] = deep_copy[i];
             }
             prototype.__joii__.metadata[meta.name] = meta;
@@ -490,6 +490,12 @@
             for (i in parent.__joii__.statics) {
                 if (!parent.__joii__.statics.hasOwnProperty(i)) continue;
 
+                // Is the parent property static too?
+                if (typeof(prototype.__joii__.metadata[i]) !== 'undefined' && prototype.__joii__.metadata[i].is_static !== true) {
+                    // TODO: maybe an interface should not have static members
+                    throw 'Member "' + i + '" must be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
+                }
+
                 if (typeof (prototype.__joii__.statics[i]) === 'undefined') {
                     if (typeof(parent.__joii__.statics[i] === 'function')) {
                         // Reference functions
@@ -528,6 +534,13 @@
                     proto_meta = prototype.__joii__.metadata[i] = property_meta;
                 }
 
+                // Is the new property declared as static?
+                // At this point we are only iterating over non static properties of our parent
+                // so if the new property is declared as static, throw an exception.
+                if (proto_meta.is_static !== property_meta.is_static) {
+                    throw 'Member "' + i + '" must not be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
+                }
+
                 // If another property with the same name already exists within
                 // our own prototype, skip its inherited implementation.
                 if (typeof(prototype[i]) !== 'undefined' &&
@@ -554,15 +567,12 @@
                         if (property_meta.is_nullable !== proto_meta.is_nullable) {
                             throw 'Member "' + i + '" must be nullable as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
                         }
-
-                        // Is the property static?
-                        if (property_meta.is_static !== proto_meta.is_static) {
-                            // TODO: maybe an interface should not have static members
-                            throw 'Member "' + i + '" must ' + (property_meta.is_static ? '' : 'not ') + 'be static as defined in the parent ' + (is_interface ? 'interface' : 'class') + '.';
-                        }
                     }
                     continue;
                 }
+
+                // Do not add static properties to prototype.
+                if (prototype.__joii__.metadata[i].is_static === true) continue;
 
                 // It's safe to apply non-function properties immediatly.
                 if (typeof(property) !== 'function' || is_interface === true) {
@@ -583,9 +593,6 @@
                     }
                     continue;
                 }
-
-                // Do not apply wrapper for static functions.
-                if (prototype.__joii__.metadata[i].is_static === true) continue;
 
                 // From this point on, the 'property' variable only contains
                 // functions. This is where the funny business starts. Instead
@@ -613,20 +620,19 @@
 
                 var gs = g.JOII.CreatePropertyGetterSetter(deep_copy, meta);
 
+                prototype.__joii__.metadata[gs.getter.name] = gs.getter.meta;
+                prototype.__joii__.metadata[gs.setter.name] = gs.setter.meta;
+
                 if (meta.is_static) {
                     prototype.__joii__.statics[gs.getter.name] = gs.getter.fn;
                     prototype.__joii__.statics[gs.setter.name] = gs.setter.fn;
-                    //continue; // Do not add static getters and setters to the prototype here
+                    // Do not add static getters and setters to the prototype here
+                } else {
+                    prototype[gs.getter.name] = gs.getter.fn;
+                    prototype[gs.setter.name] = gs.setter.fn;
                 }
-
-                prototype[gs.getter.name] = gs.getter.fn;
-                prototype.__joii__.metadata[gs.getter.name] = gs.getter.meta;
-                prototype[gs.setter.name] = gs.setter.fn;
-                prototype.__joii__.metadata[gs.setter.name] = gs.setter.meta;
             }
         }
-
-
 
         if (is_interface !== true) {
             /**
@@ -1121,16 +1127,25 @@
         for (var property in statics) {
             if (!statics.hasOwnProperty(property)) continue;
 
+            // Add all static properties to definition
             definition[property] = statics[property];
 
             if (typeof(statics[property]) === 'function') {
+                // Add static functions to the prototype so they can be used in instances using the 'this' keyword.
                 definition.prototype[property] = (function(fn) {
                     return function() {
-                        return definition[fn](arguments);
+                        return definition[fn].apply(definition, arguments);
                     };
                 })(property);
             }
         }
+
+        // Add definition to prototype.static so that all static properties
+        // can be used with 'this.static' inside instance methods.
+        definition.prototype.static = definition;
+        // Generate metadata for 'static'
+        definition.prototype.__joii__.metadata.static = g.JOII.ParseClassProperty('private static');
+        definition.prototype.__joii__.metadata.static.is_generated = true;
 
         // Apply constants to the definition
         for (var i in definition.prototype.__joii__.constants) {

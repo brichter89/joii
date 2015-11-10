@@ -43,6 +43,16 @@ test('PrototypeBuilder:StaticTest', function(assert) {
     // Test prototype generates __joii__.statics for static properties
     assert.equal(typeof(pA.__joii__.statics), 'object', 'Prototype generates __joii__.statics for static properties');
 
+    // Test overwriting static with static or non-static with non-static does not throw errors
+    assert.ok(JOII.PrototypeBuilder(undefined, {extends: pA}, {
+        'static stFn1' : function() {}
+    }), 'Overwriting static with static does not throw errors');
+    assert.ok(JOII.PrototypeBuilder(undefined, {extends: pA}, {
+        'public fn1' : function() {}
+    }), 'Overwriting non-static with non-static does not throw errors');
+    assert.ok(JOII.PrototypeBuilder(undefined, {extends: pA}, {
+    }), 'Not overwriting static does not throw errors');
+
     // TODO: Uncomment when error for duplicate function name is thrown
     //assert.throws(function() {
     //    var pC = JOII.PrototypeBuilder(undefined, {}, {
