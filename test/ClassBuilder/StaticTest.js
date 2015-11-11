@@ -91,5 +91,4 @@ test('ClassBuilder:StaticTest', function(assert) {
     A.setStField1(5);
     assert.equal((a.getStaticValue() + a2.getStaticValue()), 10, 'Test static values change for all instances');
     assert.equal((b.getStaticValue() + b2.getStaticValue()), 2,  'Test static values changes only in instances of that class');
-
 });
